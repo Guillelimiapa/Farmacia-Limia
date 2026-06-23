@@ -6,6 +6,8 @@
     <title>Farmacia Limia | Ourense</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=Playfair+Display:wght@700&amp;display=swap');
         
@@ -61,6 +63,15 @@
         .pharmacy-grid {
             background-image: url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill-rule=%22evenodd%22%3E%3Cpath fill=%22%2310b981%22 fill-opacity=%22004%22 d=%22M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-10V8h-2v16h-4v2h4v4h2v-4h4v-2h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 6v-4H4v4H0v2h4v4h2V8h4V6H6z%22/%3E%3C/g%3E%3C/svg%27');
             background-size: 60px 60px;
+        }
+        
+        #map {
+            border-radius: 18px;
+        }
+        
+        .leaflet-popup-content-wrapper {
+            border-radius: 12px;
+            font-size: 0.875rem;
         }
     </style>
 </head>
@@ -395,36 +406,20 @@
                             </div>
                             <div>
                                 <div class="font-semibold">Email</div>
-                                <div class="text-sm"><a href="/cdn-cgi/l/email-protection#274e494148674146554a46444e464b4e4a4e46094254" class="text-emerald-600 hover:underline"><span class="__cf_email__" data-cfemail="91f8fff7fed1f7f0e3fcf0f2f8f0fdf8fcf8f0bff4e2">[email&#160;protected]</span></a></div>
+                                <div class="text-sm"><a href="/cdn-cgi/l/email-protection#375e595158775156455a56545e565b5e5a5e56195244" class="text-emerald-600 hover:underline"><span class="__cf_email__" data-cfemail="721b1c141d321413001f13111b131e1b1f1b135c1701">[email&#160;protected]</span></a></div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
                 <div class="md:col-span-7">
-                    <form class="space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold mb-1.5 text-slate-600">Nombre</label>
-                                <input type="text" class="w-full px-4 py-3 border border-emerald-200 focus:border-emerald-400 transition-colors outline-none rounded-2xl text-sm" placeholder="Tu nombre">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold mb-1.5 text-slate-600">Teléfono</label>
-                                <input type="tel" class="w-full px-4 py-3 border border-emerald-200 focus:border-emerald-400 transition-colors outline-none rounded-2xl text-sm" placeholder="Tu teléfono">
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-xs font-semibold mb-1.5 text-slate-600">Mensaje</label>
-                            <textarea rows="3" class="w-full px-4 py-3 border border-emerald-200 focus:border-emerald-400 transition-colors outline-none rounded-3xl text-sm" placeholder="¿En qué podemos ayudarte?"></textarea>
-                        </div>
-                        
-                        <button type="button" 
-                                onclick="submitForm()"
-                                class="px-8 py-[13px] w-full md:w-auto transition-colors font-semibold bg-emerald-600 hover:bg-emerald-700 text-white text-sm rounded-3xl">
-                            Enviar mensaje
-                        </button>
-                    </form>
+                    <div class="rounded-3xl overflow-hidden border border-emerald-100 shadow-sm h-[310px]">
+                        <div id="map" class="w-full h-full"></div>
+                    </div>
+                    <div class="text-xs text-emerald-700 mt-2 flex items-center gap-x-1.5">
+                        <i class="fa-solid fa-map-marker-alt"></i>
+                        <span>C/ Progreso 113, entrada por Ervedelo, Ourense</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -447,7 +442,9 @@
         </div>
     </footer>
     
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdn.tailwindcss.com"></script>
+    <!-- Leaflet JS -->
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
         // Tailwind script
         function initializeTailwind() {
@@ -596,9 +593,52 @@
             
             // Keyboard accessibility for mobile btn
             console.log('%c[Farmacia Limia] Web lista para GitHub Pages.', 'color:rgb(16, 185, 129)');
+            
+            // Initialize Leaflet Map
+            initMap();
+        }
+        
+        function initMap() {
+            const mapContainer = document.getElementById('map');
+            if (!mapContainer) return;
+            
+            // Coordinates for Farmacia Limia (exact)
+            const lat = 42.33994331923669;
+            const lng = -7.867195643495124;
+            
+            const map = L.map('map', {
+                zoomControl: false,
+                attributionControl: false
+            }).setView([lat, lng], 17);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                className: 'leaflet-custom'
+            }).addTo(map);
+            
+            // Pharmacy marker
+            const markerIcon = L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="background:#10b981; width:32px; height:32px; border-radius:9999px; display:flex; align-items:center; justify-content:center; border:3px solid white; box-shadow:0 0 0 4px rgba(16,185,129,0.3);">
+                            <i class="fa-solid fa-cross fa-fw" style="color:white; font-size:14px;"></i>
+                        </div>`,
+                iconSize: [32, 32],
+                iconAnchor: [16, 16]
+            });
+            
+            const marker = L.marker([lat, lng], {icon: markerIcon}).addTo(map);
+            
+            marker.bindPopup(`
+                <div class="font-semibold text-emerald-700">Farmacia Limia</div>
+                <div class="text-xs">C/ Progreso, 113<br>Ourense</div>
+            `).openPopup();
+            
+            // Add subtle zoom control
+            L.control.zoom({
+                position: 'bottomright'
+            }).addTo(map);
         }
         
         window.onload = init;
     </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a102dd602f13ec93',t:'MTc4MjIxMTEyMw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
