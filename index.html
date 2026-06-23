@@ -120,7 +120,7 @@
                     <!-- Mobile menu -->
                     <div class="md:hidden">
                         <button id="mobile-menu-btn"
-                                class="w-10 h-10 flex items-center justify-center text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 transition-colors rounded-2xl">
+                                class="w-11 h-11 flex items-center justify-center text-slate-700 hover:text-emerald-600 hover:bg-emerald-50 active:bg-emerald-100 transition-all rounded-2xl border border-emerald-100">
                             <i class="fa-solid fa-bars text-xl"></i>
                         </button>
                     </div>
@@ -406,7 +406,7 @@
                             </div>
                             <div>
                                 <div class="font-semibold">Email</div>
-                                <div class="text-sm"><a href="/cdn-cgi/l/email-protection#375e595158775156455a56545e565b5e5a5e56195244" class="text-emerald-600 hover:underline"><span class="__cf_email__" data-cfemail="721b1c141d321413001f13111b131e1b1f1b135c1701">[email&#160;protected]</span></a></div>
+                                <div class="text-sm"><a href="/cdn-cgi/l/email-protection#620b0c040d220403100f03010b030e0b0f0b034c0711" class="text-emerald-600 hover:underline"><span class="__cf_email__" data-cfemail="c6afa8a0a986a0a7b4aba7a5afa7aaafabafa7e8a3b5">[email&#160;protected]</span></a></div>
                             </div>
                         </div>
                     </div>
@@ -474,52 +474,58 @@
             });
         }
         
-        // Mobile menu
+        // Mobile menu - Dropdown from top right
         function initMobileMenu() {
             const btn = document.getElementById('mobile-menu-btn');
             
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', (e) => {
+                e.stopImmediatePropagation();
+                
+                // Remove any existing mobile menu
+                const existing = document.getElementById('mobile-dropdown');
+                if (existing) existing.remove();
+                
                 const menu = document.createElement('div');
-                menu.className = `fixed inset-0 bg-black/40 z-[999] md:hidden`;
+                menu.id = 'mobile-dropdown';
+                menu.className = `fixed top-[68px] right-4 w-56 bg-white border border-emerald-100 shadow-xl rounded-3xl py-2 z-[999] md:hidden`;
+                
                 menu.innerHTML = `
-                    <div class="bg-white w-4/5 max-w-[260px] h-full shadow-xl p-5">
-                        <div class="flex justify-between items-center mb-8 px-1">
-                            <div class="flex items-center gap-x-2">
-                                <span class="font-extrabold text-xl"><span class="text-emerald-600">Farmacia</span><span class="text-slate-900">Limia</span></span>
-                            </div>
-                            <button class="text-xl w-9 h-9 flex items-center justify-center text-slate-400 hover:text-emerald-700">&times;</button>
-                        </div>
+                    <div class="px-1 py-1">
+                        <a href="#inicio" class="mobile-link flex items-center px-5 py-[11px] text-sm font-medium text-slate-700 hover:bg-emerald-50 rounded-2xl mx-1">Inicio</a>
+                        <a href="#nosotros" class="mobile-link flex items-center px-5 py-[11px] text-sm font-medium text-slate-700 hover:bg-emerald-50 rounded-2xl mx-1">Nosotros</a>
+                        <a href="#servicios" class="mobile-link flex items-center px-5 py-[11px] text-sm font-medium text-slate-700 hover:bg-emerald-50 rounded-2xl mx-1">Servicios</a>
+                        <a href="#consejos" class="mobile-link flex items-center px-5 py-[11px] text-sm font-medium text-slate-700 hover:bg-emerald-50 rounded-2xl mx-1">Consejos</a>
+                        <a href="#contacto" class="mobile-link flex items-center px-5 py-[11px] text-sm font-medium text-slate-700 hover:bg-emerald-50 rounded-2xl mx-1">Contacto</a>
                         
-                        <div class="flex flex-col gap-y-[3px]">
-                            <a href="#inicio" class="mobile-link px-4 py-3 font-medium text-slate-700 hover:bg-emerald-50 rounded-2xl">Inicio</a>
-                            <a href="#nosotros" class="mobile-link px-4 py-3 font-medium text-slate-700 hover:bg-emerald-50 rounded-2xl">Nosotros</a>
-                            <a href="#servicios" class="mobile-link px-4 py-3 font-medium text-slate-700 hover:bg-emerald-50 rounded-2xl">Servicios</a>
-                            <a href="#consejos" class="mobile-link px-4 py-3 font-medium text-slate-700 hover:bg-emerald-50 rounded-2xl">Consejos</a>
-                            <a href="#contacto" class="mobile-link px-4 py-3 font-medium text-slate-700 hover:bg-emerald-50 rounded-2xl">Contacto</a>
-                        </div>
+                        <div class="my-2 mx-3 border-t border-emerald-100"></div>
                         
-                        <div class="px-1 mt-8">
-                            <a href="#contacto" class="block text-center bg-emerald-600 hover:bg-emerald-700 transition-colors text-white text-sm font-bold py-3.5 rounded-3xl">Llámanos ahora</a>
-                        </div>
+                        <a href="#contacto" class="mobile-link flex items-center justify-center mx-3 mt-1 px-5 py-3 text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 transition-colors text-white rounded-2xl">
+                            Llámanos
+                        </a>
                     </div>
                 `;
                 
                 document.body.appendChild(menu);
                 
-                // Close functionality
-                const closeBtn = menu.querySelector('button');
-                closeBtn.onclick = () => menu.remove();
-                
-                menu.onclick = (e) => {
-                    if (e.target === menu) menu.remove();
+                // Close when clicking outside
+                const closeMenu = (event) => {
+                    if (!menu.contains(event.target) && event.target !== btn) {
+                        menu.remove();
+                        document.removeEventListener('click', closeMenu);
+                    }
                 };
                 
-                // Close on nav link clicks
+                // Delay to prevent immediate closing
+                setTimeout(() => {
+                    document.addEventListener('click', closeMenu, { once: true });
+                }, 50);
+                
+                // Close when clicking on any link
                 const links = menu.querySelectorAll('.mobile-link');
                 links.forEach(link => {
-                    link.onclick = () => {
+                    link.addEventListener('click', () => {
                         menu.remove();
-                    };
+                    });
                 });
             });
         }
@@ -640,5 +646,5 @@
         
         window.onload = init;
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a102dd602f13ec93',t:'MTc4MjIxMTEyMw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a102f43bfbd9ad67',t:'MTc4MjIxMjA1OQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
